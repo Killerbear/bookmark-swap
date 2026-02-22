@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Bookmark Swap</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container container-narrow">
+    <h1>Bookmark Swap</h1>
+
+    <div id="firstTimeMessage" class="first-time-message" style="display: none;">
+      <strong>Welcome!</strong>
+      <p>Select a profile below to assign your current bookmarks to it. Your bookmarks will be copied to that profile.</p>
+    </div>
+
+    <div id="status" class="status">
+      <strong>Active Profile:</strong>
+      <span id="activeProfile">None</span>
+    </div>
+
+    <div id="profileList" class="profile-list">
+      <!-- Profiles will be dynamically added here -->
+    </div>
+
+    <div class="footer">
+      <button id="manageBtn" class="secondary-btn">Manage Profiles</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

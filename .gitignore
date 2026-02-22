@@ -1,0 +1,6 @@
+# AI and IDE folders
+.ai/
+.idea/
+
+# Design files
+icon.psd
