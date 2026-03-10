@@ -6,29 +6,22 @@ const COMMON_EMOJIS = [
   '📁', '🗂️', '📊', '📈', '🎪', '🎭', '🎸', '🎤'
 ];
 
-// Predefined colors for profiles
-const COMMON_COLORS = [
-  '#2196f3', // Blue
-  '#4caf50', // Green
-  '#f44336', // Red
-  '#ff9800', // Orange
-  '#9c27b0', // Purple
-  '#00bcd4', // Cyan
-  '#ffeb3b', // Yellow
-  '#e91e63', // Pink
-  '#795548', // Brown
-  '#607d8b', // Blue Grey
-  '#ff5722', // Deep Orange
-  '#3f51b5', // Indigo
-  '#009688', // Teal
-  '#8bc34a', // Light Green
-  '#ffc107', // Amber
-  '#673ab7', // Deep Purple
-  '#03a9f4', // Light Blue
-  '#cddc39'  // Lime
+// Predefined colors — 8 hue families × 3 lightness tiers (soft → vivid → deep)
+// Columns: Red, Orange, Amber, Green, Teal, Blue, Indigo, Pink
+const COLOR_PALETTE = [
+  // Soft
+  '#e57373', '#ffb74d', '#ffd54f', '#81c784', '#4db6ac', '#64b5f6', '#7986cb', '#f06292',
+  // Vivid
+  '#e53935', '#fb8c00', '#ffb300', '#43a047', '#00897b', '#1e88e5', '#3949ab', '#d81b60',
+  // Deep
+  '#b71c1c', '#e65100', '#ff8f00', '#2e7d32', '#00695c', '#1565c0', '#283593', '#ad1457',
 ];
 
+const COLOR_ROW_LABELS = ['Soft', 'Vivid', 'Deep'];
+const COLOR_COLUMNS = 8;
+
 let currentEditingProfile = null;
+let messageTimeout = null;
 
 // Load and display profiles
 async function loadProfiles() {
@@ -40,6 +33,7 @@ async function loadProfiles() {
 
   profiles.forEach((profile, index) => {
     const settings = profileSettings[profile] || { emoji: '📁', color: '#2196f3' };
+    const isActive = profile === activeProfile;
 
     const profileItem = document.createElement('div');
     profileItem.className = 'profile-item';
@@ -47,7 +41,7 @@ async function loadProfiles() {
     profileItem.dataset.profile = profile;
     profileItem.dataset.index = index;
 
-    if (profile === activeProfile) {
+    if (isActive) {
       profileItem.classList.add('active');
     }
 
@@ -65,7 +59,6 @@ async function loadProfiles() {
     const profileVisual = document.createElement('div');
     profileVisual.className = 'profile-visual';
 
-    // Emoji
     const emojiSpan = document.createElement('span');
     emojiSpan.className = 'profile-emoji';
     emojiSpan.textContent = settings.emoji;
@@ -75,7 +68,6 @@ async function loadProfiles() {
       showEmojiPicker(profile, e.target);
     });
 
-    // Color
     const colorDiv = document.createElement('div');
     colorDiv.className = 'profile-color';
     colorDiv.style.backgroundColor = settings.color;
@@ -88,38 +80,46 @@ async function loadProfiles() {
     profileVisual.appendChild(emojiSpan);
     profileVisual.appendChild(colorDiv);
 
-    // Profile name
+    // Name group with badge
+    const nameGroup = document.createElement('div');
+    nameGroup.className = 'profile-name-group';
+
     const nameSpan = document.createElement('span');
     nameSpan.className = 'profile-name';
     nameSpan.textContent = profile;
-    if (profile === activeProfile) {
-      nameSpan.textContent += ' (Active)';
+
+    nameGroup.appendChild(nameSpan);
+
+    if (isActive) {
+      const badge = document.createElement('span');
+      badge.className = 'profile-badge';
+      badge.textContent = 'Active';
+      nameGroup.appendChild(badge);
     }
 
     profileInfo.appendChild(profileVisual);
-    profileInfo.appendChild(nameSpan);
+    profileInfo.appendChild(nameGroup);
 
     // Actions section
     const actionsDiv = document.createElement('div');
     actionsDiv.className = 'profile-actions';
 
-    // Rename button
     const renameBtn = document.createElement('button');
-    renameBtn.textContent = 'Rename';
-    renameBtn.className = 'secondary-btn small-btn';
-    renameBtn.addEventListener('click', () => renameProfile(profile));
+    renameBtn.className = 'icon-btn';
+    renameBtn.textContent = '✏️';
+    renameBtn.title = 'Rename';
+    renameBtn.addEventListener('click', () => startInlineRename(profile, nameSpan, nameGroup));
 
-    // Delete button
     const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.className = 'secondary-btn small-btn';
-    deleteBtn.addEventListener('click', () => deleteProfile(profile));
+    deleteBtn.className = 'icon-btn danger';
+    deleteBtn.textContent = '🗑️';
+    deleteBtn.title = 'Delete';
+    deleteBtn.addEventListener('click', () => showDeleteConfirm(profile, settings.emoji));
 
-    // Disable delete if it's the only profile or active profile
     if (profiles.length <= 1) {
       deleteBtn.disabled = true;
       deleteBtn.title = 'Cannot delete the last profile';
-    } else if (profile === activeProfile) {
+    } else if (isActive) {
       deleteBtn.disabled = true;
       deleteBtn.title = 'Cannot delete the active profile';
     }
@@ -131,7 +131,7 @@ async function loadProfiles() {
     profileItem.appendChild(profileInfo);
     profileItem.appendChild(actionsDiv);
 
-    // Add drag event listeners
+    // Drag events
     profileItem.addEventListener('dragstart', handleDragStart);
     profileItem.addEventListener('dragover', handleDragOver);
     profileItem.addEventListener('drop', handleDrop);
@@ -142,7 +142,125 @@ async function loadProfiles() {
   });
 }
 
-// Drag and drop handlers
+
+// ── Inline Rename ──────────────────────────────────
+
+function startInlineRename(oldName, nameSpan, nameGroup) {
+  const input = document.createElement('input');
+  input.className = 'rename-input';
+  input.value = oldName;
+  input.type = 'text';
+
+  // Hide original name
+  nameSpan.style.display = 'none';
+
+  // Hide badge if present
+  const badge = nameGroup.querySelector('.profile-badge');
+  if (badge) badge.style.display = 'none';
+
+  nameGroup.insertBefore(input, nameSpan);
+  input.focus();
+  input.select();
+
+  const commitRename = async () => {
+    const newName = input.value.trim();
+    input.remove();
+    nameSpan.style.display = '';
+    if (badge) badge.style.display = '';
+
+    if (!newName || newName === oldName) return;
+
+    try {
+      const response = await chrome.runtime.sendMessage({
+        action: 'renameProfile',
+        oldName: oldName,
+        newName: newName
+      });
+
+      if (response.success) {
+        showMessage(`Profile renamed to "${newName}"`, 'success');
+        await loadProfiles();
+      } else {
+        showMessage(response.error || 'Failed to rename profile', 'error');
+      }
+    } catch (error) {
+      showMessage('Error: ' + error.message, 'error');
+    }
+  };
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); commitRename(); }
+    if (e.key === 'Escape') {
+      input.remove();
+      nameSpan.style.display = '';
+      if (badge) badge.style.display = '';
+    }
+  });
+
+  input.addEventListener('blur', commitRename);
+}
+
+
+// ── Styled Delete Confirmation ─────────────────────
+
+function showDeleteConfirm(profileName) {
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay';
+
+  overlay.innerHTML = `
+    <div class="confirm-dialog">
+      <div class="confirm-icon">🗑️</div>
+      <h3>Delete "${profileName}"?</h3>
+      <p>All bookmarks in this profile will be permanently deleted. This action cannot be undone.</p>
+      <div class="confirm-actions">
+        <button class="cancel-btn">Cancel</button>
+        <button class="danger-btn">Delete Profile</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // Close on overlay click
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+
+  overlay.querySelector('.cancel-btn').addEventListener('click', () => overlay.remove());
+
+  overlay.querySelector('.danger-btn').addEventListener('click', async () => {
+    overlay.remove();
+
+    try {
+      const response = await chrome.runtime.sendMessage({
+        action: 'deleteProfile',
+        profileName: profileName
+      });
+
+      if (response.success) {
+        showMessage(`Profile "${profileName}" deleted`, 'success');
+        await loadProfiles();
+      } else {
+        showMessage(response.error || 'Failed to delete profile', 'error');
+      }
+    } catch (error) {
+      showMessage('Error: ' + error.message, 'error');
+    }
+  });
+
+  // Close on Escape
+  const escHandler = (e) => {
+    if (e.key === 'Escape') {
+      overlay.remove();
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
+
+// ── Drag and Drop ──────────────────────────────────
+
 let draggedElement = null;
 
 function handleDragStart(e) {
@@ -153,27 +271,18 @@ function handleDragStart(e) {
 }
 
 function handleDragOver(e) {
-  if (e.preventDefault) {
-    e.preventDefault();
-  }
+  e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
-
-  const afterElement = getDragAfterElement(e.clientY);
-  if (afterElement == null) {
-    this.classList.add('drag-over');
-  }
-
+  this.classList.add('drag-over');
   return false;
 }
 
-function handleDragLeave(e) {
+function handleDragLeave() {
   this.classList.remove('drag-over');
 }
 
 function handleDrop(e) {
-  if (e.stopPropagation) {
-    e.stopPropagation();
-  }
+  e.stopPropagation();
 
   if (draggedElement !== this) {
     const allItems = Array.from(document.querySelectorAll('.profile-item'));
@@ -186,7 +295,6 @@ function handleDrop(e) {
       this.parentNode.insertBefore(draggedElement, this);
     }
 
-    // Update profile order in storage
     updateProfileOrder();
   }
 
@@ -194,29 +302,13 @@ function handleDrop(e) {
   return false;
 }
 
-function handleDragEnd(e) {
+function handleDragEnd() {
   this.classList.remove('dragging');
   document.querySelectorAll('.profile-item').forEach(item => {
     item.classList.remove('drag-over');
   });
 }
 
-function getDragAfterElement(y) {
-  const draggableElements = [...document.querySelectorAll('.profile-item:not(.dragging)')];
-
-  return draggableElements.reduce((closest, child) => {
-    const box = child.getBoundingClientRect();
-    const offset = y - box.top - box.height / 2;
-
-    if (offset < 0 && offset > closest.offset) {
-      return { offset: offset, element: child };
-    } else {
-      return closest;
-    }
-  }, { offset: Number.NEGATIVE_INFINITY }).element;
-}
-
-// Update profile order in storage
 async function updateProfileOrder() {
   const profileItems = Array.from(document.querySelectorAll('.profile-item'));
   const newOrder = profileItems.map(item => item.dataset.profile);
@@ -229,25 +321,24 @@ async function updateProfileOrder() {
 
     if (!response.success) {
       showMessage(response.error || 'Failed to reorder profiles', 'error');
-      await loadProfiles(); // Reload on error
+      await loadProfiles();
     }
   } catch (error) {
     showMessage('Error: ' + error.message, 'error');
-    await loadProfiles(); // Reload on error
+    await loadProfiles();
   }
 }
 
-// Show emoji picker
-function showEmojiPicker(profileName, targetElement) {
-  // Close color picker if open
-  hideColorPicker();
 
+// ── Emoji Picker ───────────────────────────────────
+
+function showEmojiPicker(profileName, targetElement) {
+  hideColorPicker();
   currentEditingProfile = profileName;
 
   const picker = document.getElementById('emojiPicker');
   const grid = document.getElementById('emojiGrid');
 
-  // Populate emoji grid
   grid.innerHTML = '';
   COMMON_EMOJIS.forEach(emoji => {
     const emojiOption = document.createElement('div');
@@ -260,44 +351,36 @@ function showEmojiPicker(profileName, targetElement) {
     grid.appendChild(emojiOption);
   });
 
-  // Position picker near the clicked element
   const rect = targetElement.getBoundingClientRect();
   picker.style.left = `${rect.left}px`;
   picker.style.top = `${rect.bottom + 5}px`;
   picker.classList.add('show');
 }
 
-// Hide emoji picker
 function hideEmojiPicker() {
-  const picker = document.getElementById('emojiPicker');
-  picker.classList.remove('show');
+  document.getElementById('emojiPicker').classList.remove('show');
   currentEditingProfile = null;
 }
 
-// Update emoji
 async function updateEmoji(profileName, emoji) {
   try {
     const response = await chrome.runtime.sendMessage({
       action: 'updateProfileSettings',
       profileName: profileName,
-      settings: { emoji: emoji }
+      settings: { emoji }
     });
-
-    if (response.success) {
-      await loadProfiles();
-    } else {
-      showMessage(response.error || 'Failed to update emoji', 'error');
-    }
+    if (response.success) await loadProfiles();
+    else showMessage(response.error || 'Failed to update emoji', 'error');
   } catch (error) {
     showMessage('Error: ' + error.message, 'error');
   }
 }
 
-// Show color picker
-function showColorPicker(profileName, currentColor, targetElement) {
-  // Close emoji picker if open
-  hideEmojiPicker();
 
+// ── Color Picker ───────────────────────────────────
+
+function showColorPicker(profileName, currentColor, targetElement) {
+  hideEmojiPicker();
   currentEditingProfile = profileName;
 
   const picker = document.getElementById('colorPicker');
@@ -305,74 +388,87 @@ function showColorPicker(profileName, currentColor, targetElement) {
   const customInput = document.getElementById('customColorInput');
   const colorPreview = document.getElementById('colorPreview');
 
-  // Populate color grid
   grid.innerHTML = '';
-  COMMON_COLORS.forEach(color => {
-    const colorOption = document.createElement('div');
-    colorOption.className = 'color-option';
-    colorOption.style.backgroundColor = color;
-    colorOption.title = color;
-    colorOption.addEventListener('click', () => {
-      updateColor(profileName, color);
-      hideColorPicker();
-    });
-    grid.appendChild(colorOption);
-  });
 
-  // Set custom input to current color
+  // Build grid with row labels and color swatches
+  for (let row = 0; row < COLOR_ROW_LABELS.length; row++) {
+    // Row label spanning the full row
+    const label = document.createElement('div');
+    label.className = 'color-row-label';
+    label.textContent = COLOR_ROW_LABELS[row];
+    grid.appendChild(label);
+
+    // Color swatches for this row
+    for (let col = 0; col < COLOR_COLUMNS; col++) {
+      const color = COLOR_PALETTE[row * COLOR_COLUMNS + col];
+      const colorOption = document.createElement('div');
+      colorOption.className = 'color-option';
+      colorOption.style.backgroundColor = color;
+      colorOption.title = color;
+
+      if (color.toLowerCase() === currentColor.toLowerCase()) {
+        colorOption.classList.add('selected');
+      }
+
+      colorOption.addEventListener('click', () => {
+        updateColor(profileName, color);
+        hideColorPicker();
+      });
+      grid.appendChild(colorOption);
+    }
+  }
+
   customInput.value = currentColor;
   colorPreview.style.backgroundColor = currentColor;
 
-  // Position picker near the clicked element
   const rect = targetElement.getBoundingClientRect();
   picker.style.left = `${rect.left}px`;
   picker.style.top = `${rect.bottom + 5}px`;
   picker.classList.add('show');
 }
 
-// Hide color picker
 function hideColorPicker() {
-  const picker = document.getElementById('colorPicker');
-  picker.classList.remove('show');
+  document.getElementById('colorPicker').classList.remove('show');
   currentEditingProfile = null;
 }
 
-// Update color
 async function updateColor(profileName, color) {
   try {
     const response = await chrome.runtime.sendMessage({
       action: 'updateProfileSettings',
       profileName: profileName,
-      settings: { color: color }
+      settings: { color }
     });
-
-    if (response.success) {
-      await loadProfiles();
-    } else {
-      showMessage(response.error || 'Failed to update color', 'error');
-    }
+    if (response.success) await loadProfiles();
+    else showMessage(response.error || 'Failed to update color', 'error');
   } catch (error) {
     showMessage('Error: ' + error.message, 'error');
   }
 }
 
-// Legacy function kept for compatibility
-async function changeColor(profileName, currentColor) {
-  // This will now be handled by showColorPicker
-}
 
-// Show message
+// ── Messages ───────────────────────────────────────
+
 function showMessage(text, type) {
   const messageEl = document.getElementById('message');
+
+  // Clear any existing timeout
+  if (messageTimeout) clearTimeout(messageTimeout);
+
   messageEl.textContent = text;
   messageEl.className = `message ${type} show`;
 
-  setTimeout(() => {
-    messageEl.classList.remove('show');
+  messageTimeout = setTimeout(() => {
+    messageEl.classList.add('hiding');
+    setTimeout(() => {
+      messageEl.classList.remove('show', 'hiding');
+    }, 250);
   }, 3000);
 }
 
-// Add new profile
+
+// ── Add Profile ────────────────────────────────────
+
 async function addProfile() {
   const input = document.getElementById('newProfileName');
   const profileName = input.value.trim();
@@ -400,59 +496,8 @@ async function addProfile() {
   }
 }
 
-// Rename profile
-async function renameProfile(oldName) {
-  const newName = prompt(`Rename profile "${oldName}" to:`, oldName);
 
-  if (!newName || newName === oldName) {
-    return;
-  }
-
-  try {
-    const response = await chrome.runtime.sendMessage({
-      action: 'renameProfile',
-      oldName: oldName,
-      newName: newName.trim()
-    });
-
-    if (response.success) {
-      showMessage(`Profile renamed to "${newName}"`, 'success');
-      await loadProfiles();
-    } else {
-      showMessage(response.error || 'Failed to rename profile', 'error');
-    }
-  } catch (error) {
-    showMessage('Error: ' + error.message, 'error');
-  }
-}
-
-// Delete profile
-async function deleteProfile(profileName) {
-  const confirmed = confirm(
-    `Are you sure you want to delete the profile "${profileName}"?\n\n` +
-    `All bookmarks in this profile will be permanently deleted!`
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-    const response = await chrome.runtime.sendMessage({
-      action: 'deleteProfile',
-      profileName: profileName
-    });
-
-    if (response.success) {
-      showMessage(`Profile "${profileName}" deleted`, 'success');
-      await loadProfiles();
-    } else {
-      showMessage(response.error || 'Failed to delete profile', 'error');
-    }
-  } catch (error) {
-    showMessage('Error: ' + error.message, 'error');
-  }
-}
+// ── Event Listeners ────────────────────────────────
 
 // Close pickers when clicking outside
 document.addEventListener('click', (e) => {
@@ -468,14 +513,11 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Custom color input - live preview
+// Custom color input — live preview
 document.getElementById('customColorInput').addEventListener('input', (e) => {
   const color = e.target.value;
-  const preview = document.getElementById('colorPreview');
-
-  // Validate and preview
   if (/^#[0-9A-F]{6}$/i.test(color)) {
-    preview.style.backgroundColor = color;
+    document.getElementById('colorPreview').style.backgroundColor = color;
   }
 });
 
@@ -483,7 +525,6 @@ document.getElementById('customColorInput').addEventListener('input', (e) => {
 document.getElementById('applyCustomColor').addEventListener('click', () => {
   const color = document.getElementById('customColorInput').value;
 
-  // Validate hex color
   if (!/^#[0-9A-F]{6}$/i.test(color)) {
     showMessage('Invalid color format. Use hex format like #2196f3', 'error');
     return;
@@ -495,12 +536,9 @@ document.getElementById('applyCustomColor').addEventListener('click', () => {
   }
 });
 
-// Event listeners
 document.getElementById('addProfileBtn').addEventListener('click', addProfile);
 document.getElementById('newProfileName').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    addProfile();
-  }
+  if (e.key === 'Enter') addProfile();
 });
 
 // Load profiles on page load

@@ -83,62 +83,106 @@ async function ensureProfileFolder(profileName) {
   return profileFolder;
 }
 
-// Get bookmark bar items (excluding folders we don't want to move)
+// Get bookmark bar items (excluding the storage folder)
 async function getBookmarkBarItems() {
   const bookmarkBar = await chrome.bookmarks.getChildren(BOOKMARK_BAR_ID);
-  // Filter out the storage folder if it somehow ends up in bookmark bar
   return bookmarkBar.filter(item => item.title !== STORAGE_FOLDER_NAME);
 }
 
-// Switch to a different profile
+// Recursively copy a bookmark or folder into a target parent
+async function deepCopyBookmarkNode(node, targetParentId, index) {
+  if (node.url) {
+    // Leaf bookmark
+    return await chrome.bookmarks.create({
+      parentId: targetParentId,
+      title: node.title,
+      url: node.url,
+      index: index
+    });
+  }
+
+  // Folder — create it, then copy children recursively
+  const newFolder = await chrome.bookmarks.create({
+    parentId: targetParentId,
+    title: node.title,
+    index: index
+  });
+
+  const children = await chrome.bookmarks.getChildren(node.id);
+  for (let i = 0; i < children.length; i++) {
+    await deepCopyBookmarkNode(children[i], newFolder.id, i);
+  }
+
+  return newFolder;
+}
+
+// Remove all children from a folder (the folder itself stays)
+async function clearFolderContents(folderId) {
+  const children = await chrome.bookmarks.getChildren(folderId);
+  for (const child of children) {
+    try {
+      if (child.children !== undefined || !child.url) {
+        await chrome.bookmarks.removeTree(child.id);
+      } else {
+        await chrome.bookmarks.remove(child.id);
+      }
+    } catch (error) {
+      // Silently handle removal errors
+    }
+  }
+}
+
+// Switch to a profile (or refresh the current one) using copy-based approach.
+// Profile folders always retain their bookmarks (source of truth).
 async function switchProfile(targetProfile) {
   const { activeProfile } = await chrome.storage.local.get(['activeProfile']);
 
-  // Don't switch if already on this profile
-  if (activeProfile === targetProfile) {
-    return;
-  }
-
-  // Step 1: Save current bookmark bar to active profile (if any)
   const currentItems = await getBookmarkBarItems();
 
-  if (activeProfile && currentItems.length > 0) {
-    const activeFolder = await ensureProfileFolder(activeProfile);
-
-    if (activeFolder) {
-      // Move all items to storage
-      for (const item of currentItems) {
-        try {
-          await chrome.bookmarks.move(item.id, {
-            parentId: activeFolder.id
-          });
-        } catch (error) {
-          // Silently handle errors
-        }
+  // Step 1: Save current bookmark bar into the active profile folder.
+  // On first-ever switch (activeProfile is null), seed the target profile
+  // with the user's existing bookmarks so they aren't lost.
+  const saveToProfile = activeProfile || targetProfile;
+  const saveFolder = await ensureProfileFolder(saveToProfile);
+  if (saveFolder && currentItems.length > 0) {
+    await clearFolderContents(saveFolder.id);
+    for (let i = 0; i < currentItems.length; i++) {
+      try {
+        await deepCopyBookmarkNode(currentItems[i], saveFolder.id, i);
+      } catch (error) {
+        // Silently handle copy errors
       }
     }
   }
 
-  // Step 2: Load target profile into bookmark bar
-  const targetFolder = await ensureProfileFolder(targetProfile);
+  // Step 2: Clear the bookmark bar
+  for (const item of currentItems) {
+    try {
+      if (item.children !== undefined || !item.url) {
+        await chrome.bookmarks.removeTree(item.id);
+      } else {
+        await chrome.bookmarks.remove(item.id);
+      }
+    } catch (error) {
+      // Silently handle removal errors
+    }
+  }
 
+  // Step 3: Copy target profile bookmarks into the bookmark bar
+  // (the profile folder keeps its copies intact)
+  const targetFolder = await ensureProfileFolder(targetProfile);
   if (targetFolder) {
     const storedItems = await chrome.bookmarks.getChildren(targetFolder.id);
-
-    // Move all items to bookmark bar
     for (let i = 0; i < storedItems.length; i++) {
       try {
-        await chrome.bookmarks.move(storedItems[i].id, {
-          parentId: BOOKMARK_BAR_ID,
-          index: i
-        });
+        await deepCopyBookmarkNode(storedItems[i], BOOKMARK_BAR_ID, i);
       } catch (error) {
-        // Silently handle errors
+        // Silently handle copy errors
       }
     }
   }
 
-  // Step 3: Update active profile
+  // Step 4: Update active profile
   await chrome.storage.local.set({ activeProfile: targetProfile });
   await updateContextMenu();
 }

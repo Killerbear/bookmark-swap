@@ -1,30 +1,42 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Bookmark Swap</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container container-narrow">
-    <h1>Bookmark Swap</h1>
+  <div class="popup-container">
+    <div class="popup-header">
+      <img src="icon48.png" alt="" class="popup-header-icon">
+      <span class="popup-header-title">Bookmark Swap</span>
+    </div>
 
-    <div id="firstTimeMessage" class="first-time-message" style="display: none;">
+    <div id="firstTimeMessage" class="welcome-card" style="display: none;">
+      <div class="welcome-icon">👋</div>
       <strong>Welcome!</strong>
-      <p>Select a profile below to assign your current bookmarks to it. Your bookmarks will be copied to that profile.</p>
+      <p>Select a profile below to assign your current bookmarks to it.</p>
     </div>
 
-    <div id="status" class="status">
-      <strong>Active Profile:</strong>
-      <span id="activeProfile">None</span>
+    <div id="activeCard" class="active-profile-card">
+      <div class="active-label">Active Profile</div>
+      <div class="active-profile-display">
+        <span id="activeEmoji" class="active-emoji">📁</span>
+        <div class="active-details">
+          <span id="activeProfileName" class="active-name">None</span>
+          <span id="bookmarkCount" class="active-meta">—</span>
+        </div>
+      </div>
     </div>
+
+    <div class="section-label">Switch To</div>
 
     <div id="profileList" class="profile-list">
       <!-- Profiles will be dynamically added here -->
     </div>
 
-    <div class="footer">
-      <button id="manageBtn" class="secondary-btn">Manage Profiles</button>
+    <div class="popup-footer">
+      <button id="manageBtn" class="manage-link">⚙️ Manage Profiles</button>
     </div>
   </div>
 

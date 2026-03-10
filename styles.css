@@ -1,163 +1,1104 @@
-/* General Styles */
+/* ============================================
+   Bookmark Swap — Design System
+   ============================================ */
+
+:root {
+  /* Brand */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-subtle: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+
+  /* Surface */
+  --bg-page: #f4f5f9;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fafbff;
+  --bg-input: #f8f9fb;
+
+  /* Text */
+  --text-primary: #1a1a2e;
+  --text-secondary: #64648c;
+  --text-tertiary: #9e9eb8;
+  --text-on-gradient: #ffffff;
+
+  /* Accent */
+  --accent: #667eea;
+  --accent-hover: #5a6fd6;
+  --success: #22c55e;
+  --error: #ef4444;
+  --warning: #f59e0b;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(100, 100, 140, 0.06);
+  --shadow-sm: 0 1px 3px rgba(100, 100, 140, 0.1), 0 1px 2px rgba(100, 100, 140, 0.06);
+  --shadow-md: 0 4px 12px rgba(100, 100, 140, 0.1);
+  --shadow-lg: 0 8px 24px rgba(100, 100, 140, 0.12);
+  --shadow-xl: 0 12px 32px rgba(100, 100, 140, 0.16);
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+}
+
+
+/* ============================================
+   Keyframes
+   ============================================ */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-12px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-12px) scale(0.95); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+
+/* ============================================
+   Base / Reset
+   ============================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   margin: 0;
   padding: 0;
-  background: #ffffff;
-  color: #333;
-}
-
-.container {
-  width: 500px;
-  padding: 16px;
-}
-
-.container.container-narrow {
-  max-width: 300px;
-}
-
-h1 {
-  font-size: 20px;
-  margin: 0 0 16px 0;
-  color: #1a1a1a;
-  font-weight: 600;
-}
-
-/* First Time Message */
-.first-time-message {
-  padding: 12px;
-  background: #fff3cd;
-  border: 1px solid #ffc107;
-  border-radius: 4px;
-  margin-bottom: 16px;
-  font-size: 14px;
-}
-
-.first-time-message strong {
-  display: block;
-  margin-bottom: 8px;
-  color: #856404;
-}
-
-.first-time-message p {
-  margin: 0;
-  color: #856404;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;
 }
 
-/* Status Display */
-.status {
-  padding: 12px;
-  background: #f5f5f5;
-  border-radius: 4px;
-  margin-bottom: 16px;
-  font-size: 14px;
+h1, h2, h3 {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-.status strong {
-  display: block;
-  margin-bottom: 4px;
-  color: #666;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.status span {
-  color: #2196f3;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-/* Profile List */
-.profile-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-/* Buttons */
 button {
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
+  font-family: inherit;
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-button:active:not(:disabled) {
-  transform: translateY(0);
+  transition: all var(--duration-normal) var(--ease-out);
 }
 
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
-/* Profile Button */
-.profile-btn {
-  padding: 12px 16px;
-  background: #2196f3;
-  color: white;
-  font-size: 15px;
-  width: 100%;
-  text-align: left;
-  border: 3px solid transparent;
+input {
+  font-family: inherit;
 }
 
-.profile-btn:hover:not(:disabled) {
-  filter: brightness(0.9);
-}
 
-.profile-btn.active {
-  cursor: default;
-  border: 3px solid #fff;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
-  font-weight: 600;
-}
+/* ============================================
+   Shared Button Styles
+   ============================================ */
 
-.profile-btn.active:hover {
-  transform: none;
-  filter: none;
-}
-
-/* Primary Button */
 .primary-btn {
-  padding: 10px 16px;
-  background: #2196f3;
+  padding: 10px 20px;
+  background: var(--gradient-primary);
   color: white;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
 }
 
 .primary-btn:hover:not(:disabled) {
-  background: #1976d2;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
-/* Secondary Button */
+.primary-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-xs);
+}
+
 .secondary-btn {
-  padding: 10px 16px;
-  background: #f5f5f5;
-  color: #333;
-  border: 1px solid #ddd;
+  padding: 8px 16px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid #e2e4ed;
+  border-radius: var(--radius-sm);
 }
 
 .secondary-btn:hover:not(:disabled) {
-  background: #e0e0e0;
+  background: var(--bg-card-hover);
+  border-color: #c8ccdb;
+  box-shadow: var(--shadow-xs);
 }
 
-/* Footer */
-.footer {
-  margin-top: 8px;
-  padding-top: 12px;
-  border-top: 1px solid #e0e0e0;
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  color: var(--text-tertiary);
+  transition: all var(--duration-fast) var(--ease-out);
 }
 
-.footer button {
+.icon-btn:hover:not(:disabled) {
+  background: #f0f0f5;
+  color: var(--text-primary);
+}
+
+.icon-btn.danger:hover:not(:disabled) {
+  background: #fef2f2;
+  color: var(--error);
+}
+
+
+/* ============================================
+   Layout Containers
+   ============================================ */
+
+.container {
+  width: 560px;
+  padding: 0 20px 20px;
+}
+
+.popup-container {
+  width: 320px;
+  padding: 0;
+  animation: fadeIn var(--duration-normal) var(--ease-out);
+}
+
+
+/* ============================================
+   POPUP — Header
+   ============================================ */
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--gradient-primary);
+  color: var(--text-on-gradient);
+}
+
+.popup-header-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+}
+
+.popup-header-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+
+/* ============================================
+   POPUP — Welcome Card
+   ============================================ */
+
+.welcome-card {
+  margin: 12px 14px 0;
+  padding: 14px;
+  background: linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%);
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  animation: fadeInUp var(--duration-slow) var(--ease-out);
+}
+
+.welcome-card .welcome-icon {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.welcome-card strong {
+  display: block;
+  color: #92400e;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.welcome-card p {
+  margin: 0;
+  color: #a16207;
+  line-height: 1.5;
+}
+
+
+/* ============================================
+   POPUP — Active Profile Card
+   ============================================ */
+
+.active-profile-card {
+  margin: 14px 14px 0;
+  padding: 14px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid #ebebf0;
+}
+
+.active-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-tertiary);
+  margin-bottom: 10px;
+}
+
+.active-profile-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.active-emoji {
+  font-size: 30px;
+  line-height: 1;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.active-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.active-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.active-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+
+/* ============================================
+   POPUP — Section Label
+   ============================================ */
+
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-tertiary);
+  padding: 14px 14px 8px;
+}
+
+
+/* ============================================
+   POPUP — Profile List & Buttons
+   ============================================ */
+
+.profile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 14px;
+  margin-bottom: 6px;
+}
+
+.profile-card-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid #ebebf0;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-xs);
+  text-align: left;
+  overflow: hidden;
+  position: relative;
+  color: var(--text-primary);
+  animation: fadeInUp var(--duration-normal) var(--ease-out) both;
 }
+
+.profile-card-btn::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--profile-color, var(--accent));
+  border-radius: 0 2px 2px 0;
+  opacity: 0.7;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.profile-card-btn:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  border-color: #d5d7e2;
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.profile-card-btn:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.profile-card-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-xs);
+}
+
+.profile-card-btn.active {
+  background: var(--gradient-subtle);
+  border-color: #c7d2fe;
+  cursor: pointer;
+}
+
+.profile-card-btn.active::before {
+  opacity: 1;
+  width: 4px;
+  background: var(--accent);
+}
+
+.profile-card-btn.active:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-card-emoji {
+  font-size: 20px;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.profile-card-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.profile-card-check {
+  font-size: 14px;
+  color: var(--accent);
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.profile-card-btn.active .profile-card-check {
+  opacity: 1;
+}
+
+.profile-card-btn.switching {
+  pointer-events: none;
+}
+
+.profile-card-btn.switching .profile-card-name {
+  color: var(--text-tertiary);
+}
+
+.profile-card-btn.switching .profile-card-emoji {
+  animation: spin 0.6s linear infinite;
+}
+
+
+/* ============================================
+   POPUP — Footer
+   ============================================ */
+
+.popup-footer {
+  padding: 10px 14px 14px;
+}
+
+.manage-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+}
+
+.manage-link:hover {
+  background: #f0f0f5;
+  color: var(--text-primary);
+}
+
+
+/* ============================================
+   OPTIONS — Page Header
+   ============================================ */
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-lg);
+  margin: 24px 0 28px;
+  color: white;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 200px;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+}
+
+.header-icon {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.header-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+
+.header-content {
+  position: relative;
+  z-index: 1;
+}
+
+.header-content h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.02em;
+}
+
+.header-content p {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+
+/* ============================================
+   OPTIONS — Section Cards
+   ============================================ */
+
+.section-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid #ebebf0;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.section-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f5;
+}
+
+.section-card-header h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.section-card-header .section-icon {
+  font-size: 18px;
+}
+
+
+/* ============================================
+   OPTIONS — Profile Items (Cards)
+   ============================================ */
+
+.profile-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 8px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid #ebebf0;
+  cursor: move;
+  transition: all var(--duration-normal) var(--ease-out);
+  box-shadow: var(--shadow-xs);
+}
+
+.profile-item:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: #d5d7e2;
+}
+
+.profile-item.active {
+  background: var(--gradient-subtle);
+  border-color: #c7d2fe;
+}
+
+.profile-item.dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+  box-shadow: var(--shadow-lg);
+  transform: rotate(1deg) scale(1.02);
+}
+
+.profile-item.drag-over {
+  border-top: 3px solid var(--accent);
+  margin-top: -3px;
+}
+
+.drag-handle {
+  font-size: 16px;
+  color: var(--text-tertiary);
+  cursor: grab;
+  user-select: none;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color var(--duration-fast);
+  line-height: 1;
+  letter-spacing: 1px;
+}
+
+.drag-handle:hover {
+  color: var(--text-secondary);
+  background: #f0f0f5;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-visual {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-emoji {
+  font-size: 24px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  transition: background var(--duration-fast) var(--ease-out);
+  line-height: 1;
+}
+
+.profile-emoji:hover {
+  background: #f0f0f5;
+}
+
+.profile-color {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast);
+  box-shadow: var(--shadow-xs);
+}
+
+.profile-color:hover {
+  transform: scale(1.15);
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-name-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-radius: var(--radius-full);
+  background: #ede9fe;
+  color: #7c3aed;
+  white-space: nowrap;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+
+/* ============================================
+   OPTIONS — Emoji Picker
+   ============================================ */
+
+.emoji-picker, .color-picker {
+  display: none;
+  position: absolute;
+  background: var(--bg-card);
+  border: 1px solid #ebebf0;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-xl);
+  z-index: 1000;
+}
+
+.emoji-picker.show, .color-picker.show {
+  display: block;
+  animation: slideInDown var(--duration-normal) var(--ease-out);
+}
+
+.emoji-picker strong, .color-picker strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.emoji-option {
+  font-size: 22px;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  transition: all var(--duration-fast) var(--ease-out);
+  line-height: 1;
+}
+
+.emoji-option:hover {
+  background: var(--gradient-subtle);
+  transform: scale(1.15);
+}
+
+
+/* ============================================
+   OPTIONS — Color Picker
+   ============================================ */
+
+.color-picker {
+  min-width: 340px;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: auto repeat(8, 1fr);
+  gap: 6px;
+  align-items: center;
+  margin-top: 10px;
+  margin-bottom: 14px;
+}
+
+.color-row-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-tertiary);
+  padding-right: 6px;
+  white-space: nowrap;
+}
+
+.color-option {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all var(--duration-fast) var(--ease-spring);
+  box-shadow: var(--shadow-xs);
+}
+
+.color-option:hover {
+  transform: scale(1.18);
+  box-shadow: var(--shadow-sm);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.color-option.selected {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--text-primary);
+  transform: scale(1.1);
+}
+
+.custom-color-section {
+  border-top: 1px solid #f0f0f5;
+  padding-top: 14px;
+  margin-top: 4px;
+}
+
+.custom-color-section strong {
+  margin-bottom: 10px;
+}
+
+.custom-color-input {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.custom-color-input input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1px solid #e2e4ed;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  background: var(--bg-input);
+  transition: border-color var(--duration-fast);
+  color: var(--text-primary);
+}
+
+.custom-color-input input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.color-preview {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-xs);
+  flex-shrink: 0;
+}
+
+.custom-color-input button {
+  padding: 9px 16px;
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.custom-color-input button:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+
+/* ============================================
+   OPTIONS — Add Profile Section
+   ============================================ */
+
+.add-profile-section {
+  margin-top: 0;
+  padding: 20px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid #ebebf0;
+  box-shadow: var(--shadow-sm);
+}
+
+.add-profile-section h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.add-profile-subtitle {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-bottom: 14px;
+}
+
+.input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #e2e4ed;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  background: var(--bg-input);
+  transition: border-color var(--duration-fast);
+  color: var(--text-primary);
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.input-group input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.small-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+
+/* ============================================
+   OPTIONS — Toast Messages
+   ============================================ */
+
+.message {
+  padding: 12px 16px;
+  margin: 0 0 16px;
+  border-radius: var(--radius-sm);
+  display: none;
+  font-size: 14px;
+  font-weight: 500;
+  animation: toastIn var(--duration-normal) var(--ease-out);
+}
+
+.message.success {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.message.success::before {
+  content: '✓ ';
+  font-weight: 700;
+}
+
+.message.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.message.error::before {
+  content: '✗ ';
+  font-weight: 700;
+}
+
+.message.show {
+  display: block;
+}
+
+.message.hiding {
+  animation: toastOut var(--duration-normal) var(--ease-out) forwards;
+}
+
+
+/* ============================================
+   OPTIONS — Inline Rename Input
+   ============================================ */
+
+.rename-input {
+  padding: 4px 10px;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 500;
+  font-family: inherit;
+  background: white;
+  color: var(--text-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  width: 160px;
+  animation: fadeIn var(--duration-fast) var(--ease-out);
+}
+
+
+/* ============================================
+   OPTIONS — Delete Confirmation
+   ============================================ */
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn var(--duration-fast) var(--ease-out);
+}
+
+.confirm-dialog {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  max-width: 380px;
+  width: 90%;
+  box-shadow: var(--shadow-xl);
+  animation: fadeInUp var(--duration-normal) var(--ease-out);
+  text-align: center;
+}
+
+.confirm-dialog .confirm-icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+
+.confirm-dialog h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.confirm-dialog p {
+  margin: 0 0 20px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.confirm-actions .cancel-btn {
+  padding: 10px 20px;
+  background: #f5f5f5;
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.confirm-actions .cancel-btn:hover {
+  background: #e8e8e8;
+}
+
+.confirm-actions .danger-btn {
+  padding: 10px 20px;
+  background: var(--error);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.confirm-actions .danger-btn:hover {
+  background: #dc2626;
+  box-shadow: var(--shadow-sm);
+}
+
+
+/* ============================================
+   Utility: Stagger animation delays
+   ============================================ */
+
+.stagger-1 { animation-delay: 30ms; }
+.stagger-2 { animation-delay: 60ms; }
+.stagger-3 { animation-delay: 90ms; }
+.stagger-4 { animation-delay: 120ms; }
+.stagger-5 { animation-delay: 150ms; }
+.stagger-6 { animation-delay: 180ms; }
+.stagger-7 { animation-delay: 210ms; }
+.stagger-8 { animation-delay: 240ms; }
