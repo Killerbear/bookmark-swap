@@ -92,7 +92,7 @@ All UI components communicate with the background service worker via `chrome.run
 
 ## Storage
 
-### Chrome Local Storage (Metadata)
+### Chrome Sync Storage (Metadata)
 
 ```json
 {

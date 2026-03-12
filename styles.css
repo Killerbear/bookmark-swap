@@ -278,6 +278,34 @@ input {
   line-height: 1.5;
 }
 
+.welcome-card p + p {
+  margin-top: 8px;
+}
+
+.welcome-warning {
+  font-size: 12px;
+  color: #92400e !important;
+  font-weight: 500;
+}
+
+.export-backup-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 7px 12px;
+  background: #fff8e1;
+  border: 1px solid #f59e0b;
+  border-radius: var(--radius-sm);
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--duration-fast);
+}
+
+.export-backup-btn:hover {
+  background: #fef3c7;
+}
+
 
 /* ============================================
    POPUP — Active Profile Card

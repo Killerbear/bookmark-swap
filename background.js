@@ -10,7 +10,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 
 // Initialize storage and default profile
 async function initializeExtension() {
-  const storage = await chrome.storage.local.get(['profiles', 'profileSettings', 'activeProfile', 'initialized']);
+  const storage = await chrome.storage.sync.get(['profiles', 'profileSettings', 'activeProfile', 'initialized']);
 
   if (!storage.initialized) {
     // First time setup with default profiles
@@ -20,7 +20,7 @@ async function initializeExtension() {
       'Personal': { emoji: '🏠', color: '#4caf50' }
     };
 
-    await chrome.storage.local.set({
+    await chrome.storage.sync.set({
       profiles: profiles,
       profileSettings: profileSettings,
       activeProfile: null,
@@ -135,7 +135,7 @@ async function clearFolderContents(folderId) {
 // Switch to a profile (or refresh the current one) using copy-based approach.
 // Profile folders always retain their bookmarks (source of truth).
 async function switchProfile(targetProfile) {
-  const { activeProfile } = await chrome.storage.local.get(['activeProfile']);
+  const { activeProfile } = await chrome.storage.sync.get(['activeProfile']);
 
   const currentItems = await getBookmarkBarItems();
 
@@ -183,7 +183,7 @@ async function switchProfile(targetProfile) {
   }
 
   // Step 4: Update active profile
-  await chrome.storage.local.set({ activeProfile: targetProfile });
+  await chrome.storage.sync.set({ activeProfile: targetProfile });
   await updateContextMenu();
 }
 
@@ -191,7 +191,7 @@ async function switchProfile(targetProfile) {
 async function updateContextMenu() {
   await chrome.contextMenus.removeAll();
 
-  const { profiles, profileSettings, activeProfile } = await chrome.storage.local.get(['profiles', 'profileSettings', 'activeProfile']);
+  const { profiles, profileSettings, activeProfile } = await chrome.storage.sync.get(['profiles', 'profileSettings', 'activeProfile']);
 
   chrome.contextMenus.create({
     id: 'bookmark-swap-root',
@@ -249,7 +249,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action === 'getState') {
-    chrome.storage.local.get(['profiles', 'profileSettings', 'activeProfile']).then(data => {
+    chrome.storage.sync.get(['profiles', 'profileSettings', 'activeProfile']).then(data => {
       sendResponse(data);
     });
     return true;
@@ -298,6 +298,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.action === 'exportBookmarks') {
+    chrome.bookmarks.getTree().then(tree => {
+      sendResponse({ tree });
+    });
+    return true;
+  }
+
   if (message.action === 'reorderProfiles') {
     reorderProfiles(message.profiles).then(() => {
       sendResponse({ success: true });
@@ -310,7 +317,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Add a new profile
 async function addProfile(profileName) {
-  const { profiles, profileSettings } = await chrome.storage.local.get(['profiles', 'profileSettings']);
+  const { profiles, profileSettings } = await chrome.storage.sync.get(['profiles', 'profileSettings']);
 
   if (profiles.includes(profileName)) {
     throw new Error('Profile already exists');
@@ -321,14 +328,14 @@ async function addProfile(profileName) {
   // Add default settings for new profile
   profileSettings[profileName] = { emoji: '📁', color: '#2196f3' };
 
-  await chrome.storage.local.set({ profiles, profileSettings });
+  await chrome.storage.sync.set({ profiles, profileSettings });
   await ensureProfileFolder(profileName);
   await updateContextMenu();
 }
 
 // Delete a profile
 async function deleteProfile(profileName) {
-  const { profiles, profileSettings, activeProfile } = await chrome.storage.local.get(['profiles', 'profileSettings', 'activeProfile']);
+  const { profiles, profileSettings, activeProfile } = await chrome.storage.sync.get(['profiles', 'profileSettings', 'activeProfile']);
 
   if (profiles.length <= 1) {
     throw new Error('Cannot delete the last profile');
@@ -344,7 +351,7 @@ async function deleteProfile(profileName) {
   // Remove profile settings
   delete profileSettings[profileName];
 
-  await chrome.storage.local.set({ profiles: updatedProfiles, profileSettings });
+  await chrome.storage.sync.set({ profiles: updatedProfiles, profileSettings });
 
   // Delete the folder and its bookmarks
   const profileFolder = await ensureProfileFolder(profileName);
@@ -357,7 +364,7 @@ async function deleteProfile(profileName) {
 
 // Rename a profile
 async function renameProfile(oldName, newName) {
-  const { profiles, profileSettings, activeProfile } = await chrome.storage.local.get(['profiles', 'profileSettings', 'activeProfile']);
+  const { profiles, profileSettings, activeProfile } = await chrome.storage.sync.get(['profiles', 'profileSettings', 'activeProfile']);
 
   if (profiles.includes(newName)) {
     throw new Error('A profile with this name already exists');
@@ -370,11 +377,11 @@ async function renameProfile(oldName, newName) {
   profileSettings[newName] = profileSettings[oldName];
   delete profileSettings[oldName];
 
-  await chrome.storage.local.set({ profiles: updatedProfiles, profileSettings });
+  await chrome.storage.sync.set({ profiles: updatedProfiles, profileSettings });
 
   // Update active profile if it was the renamed one
   if (activeProfile === oldName) {
-    await chrome.storage.local.set({ activeProfile: newName });
+    await chrome.storage.sync.set({ activeProfile: newName });
   }
 
   // Rename the folder
@@ -388,26 +395,26 @@ async function renameProfile(oldName, newName) {
 
 // Update profile settings (emoji and color)
 async function updateProfileSettings(profileName, settings) {
-  const { profileSettings } = await chrome.storage.local.get(['profileSettings']);
+  const { profileSettings } = await chrome.storage.sync.get(['profileSettings']);
 
   profileSettings[profileName] = {
     ...profileSettings[profileName],
     ...settings
   };
 
-  await chrome.storage.local.set({ profileSettings });
+  await chrome.storage.sync.set({ profileSettings });
   await updateContextMenu();
 }
 
 // Reorder profiles
 async function reorderProfiles(newOrder) {
-  const { profiles } = await chrome.storage.local.get(['profiles']);
+  const { profiles } = await chrome.storage.sync.get(['profiles']);
 
   // Validate that all profiles are present
   if (newOrder.length !== profiles.length || !newOrder.every(p => profiles.includes(p))) {
     throw new Error('Invalid profile order');
   }
 
-  await chrome.storage.local.set({ profiles: newOrder });
+  await chrome.storage.sync.set({ profiles: newOrder });
   await updateContextMenu();
 }
