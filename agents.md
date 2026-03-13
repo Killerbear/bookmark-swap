@@ -60,7 +60,7 @@ Background Service Worker (background.js)
 Chrome Bookmarks API  +  Chrome Storage API
         │
         ▼
-_BookmarkSwap folder (Other Bookmarks)  +  chrome.storage.local
+_BookmarkSwap folder (Other Bookmarks)  +  chrome.storage.sync
 ```
 
 ### Component Responsibilities
@@ -94,6 +94,8 @@ All UI components communicate with the background service worker via `chrome.run
 
 ### Chrome Sync Storage (Metadata)
 
+The extension uses `chrome.storage.sync` for all metadata. All reads and writes go through this API — never `chrome.storage.local`.
+
 ```json
 {
   "profiles": ["Work", "Personal", "Research"],
@@ -106,6 +108,30 @@ All UI components communicate with the background service worker via `chrome.run
   "initialized": true
 }
 ```
+
+#### ⚠️ `chrome.storage.sync` Quota Limits
+
+| Limit | Value | Notes |
+|-------|-------|-------|
+| **Total storage** | 102,400 bytes (100 KB) | Sum of all keys and values |
+| **Per-item size** | 8,192 bytes (8 KB) | Each top-level key/value pair |
+| **Max items** | 512 | Number of top-level keys |
+| **Write operations** | MAX_WRITE_OPERATIONS_PER_HOUR = 1,800 | Sustained write rate |
+| **Write operations** | MAX_WRITE_OPERATIONS_PER_MINUTE = 120 | Burst write rate |
+
+**Current storage usage estimate (per profile):**
+- Profile name in `profiles` array: ~20 bytes avg
+- Settings entry in `profileSettings`: ~50 bytes (emoji 4–8 bytes + `#RRGGBB` 7 bytes + keys/overhead)
+- Total per profile: ~70 bytes
+
+At ~70 bytes per profile, the 100 KB total cap supports well over 1,000 profiles — far beyond any realistic use. The 8 KB per-item cap is the binding constraint: `profileSettings` (one item) grows by ~50 bytes per profile, hitting 8 KB at roughly **160 profiles**.
+
+**Rules for contributors — before adding any new stored data:**
+- ✅ Estimate the byte size of the new data (JSON-encoded, including key names).
+- ✅ Check whether the data belongs in an existing item or needs a new key.
+- ✅ Ensure no single key/value pair can grow beyond **8 KB** (the per-item hard limit).
+- ✅ Prefer storing data per-profile inside `profileSettings[name]` rather than adding new top-level keys.
+- ✅ Never store bookmark content (URLs, titles) in `chrome.storage.sync` — that belongs in the bookmark folder structure.
 
 ### Bookmark Folder Structure (Actual Bookmarks)
 
@@ -138,7 +164,7 @@ When a user switches from profile **A** to profile **B**:
 3. **Save step:** The bar items are **copied** into the active profile's folder (folder is cleared first, then re-populated). On first-ever switch (`activeProfile` is `null`), the bar items are copied into the **target** profile's folder instead — seeding it with the user's existing bookmarks.
 4. The bookmark bar items are deleted (the profile folder still holds the complete copy).
 5. All bookmarks inside profile **B**'s storage folder are **copied** to the bookmark bar, preserving their original order. Profile **B**'s folder keeps its bookmarks intact.
-6. `activeProfile` is updated in `chrome.storage.local`.
+6. `activeProfile` is updated in `chrome.storage.sync`.
 7. The context menu is rebuilt to reflect the new active profile (✓ indicator).
 
 **Re-selecting the active profile** triggers the same flow — acting as a "refresh" that re-syncs the bar from the profile folder.
@@ -232,7 +258,7 @@ No network, tabs, or host permissions are required. The extension is fully offli
 | API | Usage |
 |-----|-------|
 | `chrome.bookmarks` | `getChildren`, `create`, `remove`, `removeTree`, `update` — manage bookmark bar and storage folders (copy-based, never move) |
-| `chrome.storage.local` | `get`, `set` — read/write profile metadata |
+| `chrome.storage.sync` | `get`, `set` — read/write profile metadata |
 | `chrome.contextMenus` | `create`, `removeAll`, `onClicked` — build and handle the right-click menu |
 | `chrome.runtime` | `sendMessage`, `onMessage`, `onInstalled`, `openOptionsPage` — inter-component messaging and lifecycle events |
 
