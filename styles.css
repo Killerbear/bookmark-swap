@@ -81,16 +81,6 @@
   to { transform: rotate(360deg); }
 }
 
-@keyframes toastIn {
-  from { opacity: 0; transform: translateY(-12px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes toastOut {
-  from { opacity: 1; transform: translateY(0) scale(1); }
-  to   { opacity: 0; transform: translateY(-12px) scale(0.95); }
-}
-
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -974,51 +964,6 @@ input {
 .small-btn {
   padding: 6px 12px;
   font-size: 13px;
-}
-
-
-/* ============================================
-   OPTIONS — Toast Messages
-   ============================================ */
-
-.message {
-  padding: 12px 16px;
-  margin: 0 0 16px;
-  border-radius: var(--radius-sm);
-  display: none;
-  font-size: 14px;
-  font-weight: 500;
-  animation: toastIn var(--duration-normal) var(--ease-out);
-}
-
-.message.success {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #bbf7d0;
-}
-
-.message.success::before {
-  content: '✓ ';
-  font-weight: 700;
-}
-
-.message.error {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
-}
-
-.message.error::before {
-  content: '✗ ';
-  font-weight: 700;
-}
-
-.message.show {
-  display: block;
-}
-
-.message.hiding {
-  animation: toastOut var(--duration-normal) var(--ease-out) forwards;
 }
 
 

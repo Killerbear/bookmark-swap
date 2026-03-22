@@ -21,7 +21,7 @@ const COLOR_ROW_LABELS = ['Soft', 'Vivid', 'Deep'];
 const COLOR_COLUMNS = 8;
 
 let currentEditingProfile = null;
-let messageTimeout = null;
+
 
 // Load and display profiles
 async function loadProfiles() {
@@ -178,13 +178,9 @@ function startInlineRename(oldName, nameSpan, nameGroup) {
       });
 
       if (response.success) {
-        showMessage(`Profile renamed to "${newName}"`, 'success');
         await loadProfiles();
-      } else {
-        showMessage(response.error || 'Failed to rename profile', 'error');
       }
-    } catch (error) {
-      showMessage('Error: ' + error.message, 'error');
+    } catch {
     }
   };
 
@@ -238,13 +234,9 @@ function showDeleteConfirm(profileName) {
       });
 
       if (response.success) {
-        showMessage(`Profile "${profileName}" deleted`, 'success');
         await loadProfiles();
-      } else {
-        showMessage(response.error || 'Failed to delete profile', 'error');
       }
-    } catch (error) {
-      showMessage('Error: ' + error.message, 'error');
+    } catch {
     }
   });
 
@@ -320,11 +312,9 @@ async function updateProfileOrder() {
     });
 
     if (!response.success) {
-      showMessage(response.error || 'Failed to reorder profiles', 'error');
       await loadProfiles();
     }
-  } catch (error) {
-    showMessage('Error: ' + error.message, 'error');
+  } catch {
     await loadProfiles();
   }
 }
@@ -370,9 +360,7 @@ async function updateEmoji(profileName, emoji) {
       settings: { emoji }
     });
     if (response.success) await loadProfiles();
-    else showMessage(response.error || 'Failed to update emoji', 'error');
-  } catch (error) {
-    showMessage('Error: ' + error.message, 'error');
+  } catch {
   }
 }
 
@@ -440,30 +428,8 @@ async function updateColor(profileName, color) {
       settings: { color }
     });
     if (response.success) await loadProfiles();
-    else showMessage(response.error || 'Failed to update color', 'error');
-  } catch (error) {
-    showMessage('Error: ' + error.message, 'error');
+  } catch {
   }
-}
-
-
-// ── Messages ───────────────────────────────────────
-
-function showMessage(text, type) {
-  const messageEl = document.getElementById('message');
-
-  // Clear any existing timeout
-  if (messageTimeout) clearTimeout(messageTimeout);
-
-  messageEl.textContent = text;
-  messageEl.className = `message ${type} show`;
-
-  messageTimeout = setTimeout(() => {
-    messageEl.classList.add('hiding');
-    setTimeout(() => {
-      messageEl.classList.remove('show', 'hiding');
-    }, 250);
-  }, 3000);
 }
 
 
@@ -513,9 +479,7 @@ ${childrenHTML}
     a.click();
     URL.revokeObjectURL(url);
 
-    showMessage('Bookmarks exported successfully', 'success');
-  } catch (error) {
-    showMessage('Export failed: ' + error.message, 'error');
+  } catch {
   }
 }
 
@@ -526,10 +490,7 @@ async function addProfile() {
   const input = document.getElementById('newProfileName');
   const profileName = input.value.trim();
 
-  if (!profileName) {
-    showMessage('Please enter a profile name', 'error');
-    return;
-  }
+  if (!profileName) return;
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -538,14 +499,10 @@ async function addProfile() {
     });
 
     if (response.success) {
-      showMessage(`Profile "${profileName}" added successfully`, 'success');
       input.value = '';
       await loadProfiles();
-    } else {
-      showMessage(response.error || 'Failed to add profile', 'error');
     }
-  } catch (error) {
-    showMessage('Error: ' + error.message, 'error');
+  } catch {
   }
 }
 
@@ -578,10 +535,7 @@ document.getElementById('customColorInput').addEventListener('input', (e) => {
 document.getElementById('applyCustomColor').addEventListener('click', () => {
   const color = document.getElementById('customColorInput').value;
 
-  if (!/^#[0-9A-F]{6}$/i.test(color)) {
-    showMessage('Invalid color format. Use hex format like #2196f3', 'error');
-    return;
-  }
+  if (!/^#[0-9A-F]{6}$/i.test(color)) return;
 
   if (currentEditingProfile) {
     updateColor(currentEditingProfile, color);
