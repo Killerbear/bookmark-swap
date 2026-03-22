@@ -646,13 +646,11 @@ input {
 
 .profile-item.drag-over {
   border-top: 3px solid var(--accent);
-  margin-top: -3px;
 }
 
 .drag-handle {
   font-size: 16px;
   color: var(--text-tertiary);
-  cursor: grab;
   user-select: none;
   padding: 4px;
   border-radius: 4px;
@@ -661,7 +659,7 @@ input {
   letter-spacing: 1px;
 }
 
-.drag-handle:hover {
+.profile-item:hover .drag-handle {
   color: var(--text-secondary);
   background: #f0f0f5;
 }
