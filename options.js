@@ -37,7 +37,6 @@ async function loadProfiles() {
 
     const profileItem = document.createElement('div');
     profileItem.className = 'profile-item';
-    profileItem.draggable = true;
     profileItem.dataset.profile = profile;
     profileItem.dataset.index = index;
 
@@ -131,14 +130,19 @@ async function loadProfiles() {
     profileItem.appendChild(profileInfo);
     profileItem.appendChild(actionsDiv);
 
-    // Drag events
-    profileItem.addEventListener('dragstart', handleDragStart);
-    profileItem.addEventListener('dragover', handleDragOver);
-    profileItem.addEventListener('drop', handleDrop);
-    profileItem.addEventListener('dragend', handleDragEnd);
-    profileItem.addEventListener('dragleave', handleDragLeave);
-
     profilesList.appendChild(profileItem);
+  });
+
+  // Initialize SortableJS for drag-and-drop reordering
+  Sortable.create(profilesList, {
+    handle: '.drag-handle',
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    chosenClass: 'sortable-chosen',
+    dragClass: 'sortable-drag',
+    onEnd: function () {
+      updateProfileOrder();
+    }
   });
 }
 
@@ -251,57 +255,9 @@ function showDeleteConfirm(profileName) {
 }
 
 
-// ── Drag and Drop ──────────────────────────────────
+// ── Drag and Drop (powered by SortableJS) ──────────
 
-let draggedElement = null;
-
-function handleDragStart(e) {
-  draggedElement = this;
-  this.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/html', this.innerHTML);
-}
-
-function handleDragOver(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  this.classList.add('drag-over');
-  return false;
-}
-
-function handleDragLeave() {
-  this.classList.remove('drag-over');
-}
-
-function handleDrop(e) {
-  e.stopPropagation();
-
-  if (draggedElement !== this) {
-    const allItems = Array.from(document.querySelectorAll('.profile-item'));
-    const draggedIndex = allItems.indexOf(draggedElement);
-    const targetIndex = allItems.indexOf(this);
-
-    if (draggedIndex < targetIndex) {
-      this.parentNode.insertBefore(draggedElement, this.nextSibling);
-    } else {
-      this.parentNode.insertBefore(draggedElement, this);
-    }
-
-    updateProfileOrder();
-  }
-
-  this.classList.remove('drag-over');
-  return false;
-}
-
-function handleDragEnd() {
-  this.classList.remove('dragging');
-  document.querySelectorAll('.profile-item').forEach(item => {
-    item.classList.remove('drag-over');
-  });
-}
-
-async function updateProfileOrder() {
+async function updateProfileOrder(){
   const profileItems = Array.from(document.querySelectorAll('.profile-item'));
   const newOrder = profileItems.map(item => item.dataset.profile);
 

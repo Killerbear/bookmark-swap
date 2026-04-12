@@ -36,10 +36,10 @@ Before merging any change that touches bookmark operations (`switchProfile`, `ad
 - **Custom Emoji** — Assign one of 32 emoji to each profile for quick identification.
 - **Custom Colors** — Choose from 18 preset colors or enter a hex code per profile.
 - **Context Menu** — Right-click the extension icon for quick profile switching.
-- **Drag-and-Drop Reordering** — Reorder profiles on the options page by dragging.
+- **Drag-and-Drop Reordering** — Reorder profiles on the options page by dragging (powered by [SortableJS](https://github.com/SortableJS/Sortable)).
 - **Default Profiles** — Pre-configured "Work" 💼 (blue) and "Personal" 🏠 (green) on first install.
 - **Active Profile Indicator** — Popup and context menu highlight the current profile.
-- **Zero External Dependencies** — Fully self-contained, no network requests.
+- **Zero External Dependencies** — Fully self-contained, no network requests. The only vendored library is [SortableJS](https://github.com/SortableJS/Sortable) (bundled locally for drag-and-drop).
 
 ---
 
@@ -71,6 +71,7 @@ _BookmarkSwap folder (Other Bookmarks)  +  chrome.storage.sync
 | **popup.html / popup.js** | Quick-switch UI shown when clicking the extension icon |
 | **options.html / options.js** | Full profile management page (create, rename, delete, reorder, customize) |
 | **styles.css** | Shared styles for popup and options page |
+| **Sortable.min.js** | [SortableJS](https://github.com/SortableJS/Sortable) library (v1.15.7) for drag-and-drop reordering |
 | **manifest.json** | Extension metadata, permissions, and component declarations |
 
 ### Message Passing
@@ -295,6 +296,7 @@ bookmark-swap/
 ├── popup.js           Popup behaviour
 ├── options.html       Profile management page markup
 ├── options.js         Options page behaviour
+├── Sortable.min.js    SortableJS library (drag-and-drop)
 ├── styles.css         Shared styles
 ├── icon16.png         Toolbar icon (16 px)
 ├── icon48.png         Extensions page icon (48 px)
@@ -316,3 +318,13 @@ bookmark-swap/
 - **Bookmark operation errors** are silently caught per-item to avoid aborting mid-switch and leaving the bar in an inconsistent state.
 - All background operations use `async`/`await`; message handlers keep the channel open with `return true`.
 - **`chrome.bookmarks.move()` is banned** for profile switching — only `create()` (copy) and `remove()`/`removeTree()` (cleanup after save) are used.
+
+## Code Review Standards
+After completing any implementation, review the code for:
+- Functions longer than 30 lines (likely doing too much)
+- Logic duplicated more than twice (extract to utility)
+- Any `any` type usage in TypeScript (replace with real types)
+- Components with more than 3 props that could be grouped into an object
+- Missing error handling on async operations
+
+Run /simplify before presenting code to the user.

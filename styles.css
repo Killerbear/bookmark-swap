@@ -188,11 +188,9 @@ input {
   color: var(--text-primary);
 }
 
-.icon-btn.danger:hover:not(:disabled) {
-  background: #fef2f2;
-  color: var(--error);
+.profile-item.active .icon-btn:hover:not(:disabled) {
+  background: #fff;
 }
-
 
 /* ============================================
    Layout Containers
@@ -622,7 +620,6 @@ input {
   background: var(--bg-card);
   border-radius: var(--radius-md);
   border: 1px solid #ebebf0;
-  cursor: move;
   transition: all var(--duration-normal) var(--ease-out);
   box-shadow: var(--shadow-xs);
 }
@@ -637,15 +634,20 @@ input {
   border-color: #c7d2fe;
 }
 
-.profile-item.dragging {
-  opacity: 0.4;
-  cursor: grabbing;
-  box-shadow: var(--shadow-lg);
-  transform: rotate(1deg) scale(1.02);
+.sortable-ghost {
+  opacity: 0.3;
+  background: var(--gradient-subtle);
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-md);
 }
 
-.profile-item.drag-over {
-  border-top: 3px solid var(--accent);
+.sortable-chosen {
+  box-shadow: var(--shadow-lg);
+  cursor: grabbing;
+}
+
+.sortable-drag {
+  opacity: 1;
 }
 
 .drag-handle {
@@ -657,9 +659,10 @@ input {
   transition: color var(--duration-fast);
   line-height: 1;
   letter-spacing: 1px;
+  cursor: move;
 }
 
-.profile-item:hover .drag-handle {
+.drag-handle:hover {
   color: var(--text-secondary);
   background: #f0f0f5;
 }
