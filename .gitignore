@@ -1,6 +1,7 @@
 # AI and IDE folders
 .ai/
 .idea/
+.claude/
 
 # Design files
 icon.psd

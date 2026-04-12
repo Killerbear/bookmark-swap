@@ -59,6 +59,8 @@ async function loadState() {
   // Update active profile card
   if (activeProfile) {
     const settings = profileSettings[activeProfile] || { emoji: '📁', color: '#2196f3' };
+    const activeCard = document.getElementById('activeCard');
+    activeCard.style.setProperty('--profile-color', settings.color);
     document.getElementById('activeEmoji').textContent = settings.emoji;
     document.getElementById('activeProfileName').textContent = activeProfile;
 
@@ -82,7 +84,7 @@ async function loadState() {
 
     const button = document.createElement('button');
     button.className = 'profile-card-btn';
-    if (index < 9) button.classList.add(`stagger-${index + 1}`);
+    if (index < 8) button.classList.add(`stagger-${index + 1}`);
     button.style.setProperty('--profile-color', settings.color);
 
     if (isActive) {

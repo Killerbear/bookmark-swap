@@ -110,10 +110,10 @@ async function loadProfiles() {
     renameBtn.addEventListener('click', () => startInlineRename(profile, nameSpan, nameGroup));
 
     const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'icon-btn danger';
+    deleteBtn.className = 'icon-btn';
     deleteBtn.textContent = '🗑️';
     deleteBtn.title = 'Delete';
-    deleteBtn.addEventListener('click', () => showDeleteConfirm(profile, settings.emoji));
+    deleteBtn.addEventListener('click', () => showDeleteConfirm(profile));
 
     if (profiles.length <= 1) {
       deleteBtn.disabled = true;

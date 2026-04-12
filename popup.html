@@ -16,12 +16,12 @@
       <div class="welcome-icon">👋</div>
       <strong>Welcome to Bookmark Swap!</strong>
       <p>Select a profile below to assign your current bookmarks to it.</p>
-      <p class="welcome-warning">⚠️ Switching profiles will replace your current bookmark bar. We recommend exporting a backup of all your bookmarks first.</p>
-      <button id="popupExportBtn" class="export-backup-btn">⬇ Export Bookmarks</button>
+      <p class="welcome-warning"><span aria-hidden="true">⚠️</span> Switching profiles will replace your current bookmark bar. We recommend exporting a backup of all your bookmarks first.</p>
+      <button id="popupExportBtn" type="button" class="export-backup-btn"><span aria-hidden="true">⬇</span> Export Bookmarks</button>
     </div>
 
     <div id="activeCard" class="active-profile-card">
-      <div class="active-label">Active Profile</div>
+      <p class="active-label">Active Profile</p>
       <div class="active-profile-display">
         <span id="activeEmoji" class="active-emoji">📁</span>
         <div class="active-details">
@@ -31,14 +31,14 @@
       </div>
     </div>
 
-    <div class="section-label">Switch To</div>
+    <p class="section-label">Switch To</p>
 
     <div id="profileList" class="profile-list">
       <!-- Profiles will be dynamically added here -->
     </div>
 
     <div class="popup-footer">
-      <button id="manageBtn" class="manage-link">⚙️ Manage Profiles</button>
+      <button id="manageBtn" type="button" class="manage-link"><span aria-hidden="true">⚙️</span> Manage Profiles</button>
     </div>
   </div>
 

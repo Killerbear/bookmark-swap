@@ -83,6 +83,28 @@ async function ensureProfileFolder(profileName) {
   return profileFolder;
 }
 
+// Find an existing profile folder without creating it
+async function findProfileFolder(profileName) {
+  const storageFolder = await ensureStorageFolder();
+  if (!storageFolder) return null;
+  const children = await chrome.bookmarks.getChildren(storageFolder.id);
+  return children.find(n => n.title === profileName) || null;
+}
+
+// Recursively count all bookmarks (not folders) under a list of nodes
+async function countBookmarks(nodes) {
+  let count = 0;
+  for (const node of nodes) {
+    if (node.url) {
+      count++;
+    } else {
+      const children = await chrome.bookmarks.getChildren(node.id);
+      count += await countBookmarks(children);
+    }
+  }
+  return count;
+}
+
 // Get bookmark bar items (excluding the storage folder)
 async function getBookmarkBarItems() {
   const bookmarkBar = await chrome.bookmarks.getChildren(BOOKMARK_BAR_ID);
@@ -121,7 +143,7 @@ async function clearFolderContents(folderId) {
   const children = await chrome.bookmarks.getChildren(folderId);
   for (const child of children) {
     try {
-      if (child.children !== undefined || !child.url) {
+      if (!child.url) {
         await chrome.bookmarks.removeTree(child.id);
       } else {
         await chrome.bookmarks.remove(child.id);
@@ -158,7 +180,7 @@ async function switchProfile(targetProfile) {
   // Step 2: Clear the bookmark bar
   for (const item of currentItems) {
     try {
-      if (item.children !== undefined || !item.url) {
+      if (!item.url) {
         await chrome.bookmarks.removeTree(item.id);
       } else {
         await chrome.bookmarks.remove(item.id);
@@ -238,7 +260,7 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
 });
 
 // Listen for messages from popup
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'switchProfile') {
     switchProfile(message.profile).then(() => {
       sendResponse({ success: true });
@@ -256,8 +278,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action === 'getBookmarkCount') {
-    getBookmarkBarItems().then(items => {
-      sendResponse({ count: items.length });
+    getBookmarkBarItems().then(items => countBookmarks(items)).then(count => {
+      sendResponse({ count });
     });
     return true;
   }
@@ -354,7 +376,7 @@ async function deleteProfile(profileName) {
   await chrome.storage.sync.set({ profiles: updatedProfiles, profileSettings });
 
   // Delete the folder and its bookmarks
-  const profileFolder = await ensureProfileFolder(profileName);
+  const profileFolder = await findProfileFolder(profileName);
   if (profileFolder) {
     await chrome.bookmarks.removeTree(profileFolder.id);
   }
@@ -385,7 +407,7 @@ async function renameProfile(oldName, newName) {
   }
 
   // Rename the folder
-  const oldFolder = await ensureProfileFolder(oldName);
+  const oldFolder = await findProfileFolder(oldName);
   if (oldFolder) {
     await chrome.bookmarks.update(oldFolder.id, { title: newName });
   }
